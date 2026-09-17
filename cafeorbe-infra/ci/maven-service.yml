@@ -1,0 +1,30 @@
+# Plantilla reutilizable de CI para los servicios Java/Maven de CafeOrbe.
+# Cada repositorio la copia a .github/workflows/ci.yml y ajusta lo que necesite.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Compilar
+        run: mvn -B -ntp compile
+
+      - name: Pruebas
+        run: mvn -B -ntp test
+
+      - name: Verificar cobertura mínima (domain/)
+        run: mvn -B -ntp verify

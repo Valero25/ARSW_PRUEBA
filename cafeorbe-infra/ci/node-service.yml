@@ -1,0 +1,32 @@
+# Plantilla reutilizable de CI para cafeorbe-web (Node/Vite).
+# Se copia a .github/workflows/ci.yml y se ajusta según haga falta.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Pruebas
+        run: npm run test -- --run
+
+      - name: Build
+        run: npm run build

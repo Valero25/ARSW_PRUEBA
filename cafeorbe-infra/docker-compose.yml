@@ -1,0 +1,61 @@
+version: "3.9"
+
+# Dependencias compartidas de CafeOrbe: base de datos, broker de eventos y
+# el pub/sub que usa cafeorbe-realtime-gateway para el fan-out de pujas.
+# Cada microservicio se levanta después, desde su propio repositorio.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cafeorbe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cafeorbe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cafeorbe}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cafeorbe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: cafeorbe-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-cafeorbe}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-cafeorbe}
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # UI de administración
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: cafeorbe-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:

@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: cafeorbe-realtime-gateway
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:cafeorbe}
+    password: ${RABBITMQ_PASSWORD:cafeorbe}
+
+server:
+  port: ${SERVER_PORT:8090}
+
+cafeorbe:
+  conteo-conectados:
+    intervalo-ms: ${CONTEO_CONECTADOS_INTERVALO_MS:2500}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

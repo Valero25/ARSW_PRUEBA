@@ -1,0 +1,69 @@
+spring:
+  application:
+    name: cafeorbe-api-gateway
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cloud:
+    gateway:
+      routes:
+        - id: identity
+          uri: ${IDENTITY_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/auth/**,/usuarios/**
+
+        - id: auction-pujas
+          uri: ${AUCTION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/subastas/*/pujas
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                key-resolver: "#{@usuarioKeyResolver}"
+
+        - id: auction
+          uri: ${AUCTION_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/lotes/**,/subastas/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@usuarioKeyResolver}"
+
+        - id: streaming
+          uri: ${STREAMING_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/transmisiones/**
+
+        - id: store
+          uri: ${STORE_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/productos/**,/ordenes/**,/carrito/**
+
+        - id: shipping
+          uri: ${SHIPPING_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/envios/**
+
+server:
+  port: ${SERVER_PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET:}
+
+cafeorbe:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
